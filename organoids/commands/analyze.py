@@ -47,7 +47,7 @@ def analyze(directory, ext, exif_ext, output):
     measurements = {}
     for entry, d in tqdm.tqdm(data.items(), desc="Computing areas"):
         if output:
-            day = os.path.basename(entry).split("d")[-1].split("_")[0]
+            day = os.path.basename(entry).split("d")[-1].split("_")[0].split()[0]
         image_path = os.path.join(os.path.dirname(entry), d["imagePath"])
         
         pix_size = None
