@@ -47,7 +47,7 @@ def analyze(directory, ext, exif_ext, output):
     measurements = {}
     for entry, d in tqdm.tqdm(data.items(), desc="Computing areas"):
         if output:
-            day = os.path.basename(entry).split("_d")[1].split("_")[0]
+            day = os.path.basename(entry).split("d")[-1].split("_")[0]
         image_path = os.path.join(os.path.dirname(entry), d["imagePath"])
         
         pix_size = None
@@ -84,7 +84,7 @@ def analyze(directory, ext, exif_ext, output):
             s["label"] = f"{s['label']} ({area_label})"  # Append area to the label
             s["area"] = area
             if output:
-                measurements.setdefault(day, []).append(area)
+                measurements.setdefault(day, []).append(repr(area))
     end()
     start("Writing areas to disk")
     for entry, d in tqdm.tqdm(data.items(), desc="Writing areas to disk"):
