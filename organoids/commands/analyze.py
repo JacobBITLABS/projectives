@@ -18,7 +18,8 @@ def _analyze():
 @click.option("--ext", default=".json", help="File extension to search for (default: .json)")
 @click.option("--exif-ext", default=".jpg", help="File extension to extract EXIF from (default: .jpg)")
 @click.option("--output", type=click.Path(), help="Output CSV file to write results (default: None, does not write to disk)")
-def analyze(directory, ext, exif_ext, output):
+@click.option("--scale", default=1, type=float, help="Scale factor for area calculations (default: 1).")
+def analyze(directory, ext, exif_ext, output, scale):
     start("Scanning for files")
     todo = list(directory)
     found = []
@@ -83,7 +84,7 @@ def analyze(directory, ext, exif_ext, output):
         # Compute areas and update each shape's label
         for s in d["shapes"]:
             poly = shapely.geometry.Polygon(s["points"])
-            area = (poly.area * pix_size) / mag
+            area = (poly.area * pix_size) / mag * scale
             
             # Update shape label to include area in the desired units
             area_label = f"Area: {area:.2f} mm²" if exif_found else f"Area: {area:.2f} pixels²"
