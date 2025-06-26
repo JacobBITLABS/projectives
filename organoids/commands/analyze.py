@@ -100,10 +100,10 @@ def analyze(directory, ext, exif_ext, output):
         ws = wb.active
         ws.title = directory[0]
         ws.cell(row=1, column=1, value="Day")
-        max_len = max(len(meas) for meas in data.values())
+        max_len = max(len(meas) for meas in measurements.values())
         for i in range(max_len):
             ws.cell(row=1, column=i + 2, value=f"Measurement {i+1}")
-        for row_idx, (day, measurements) in enumerate(data.items(), start=2):
+        for row_idx, (day, measurements) in enumerate(measurements.items(), start=2):
             ws.cell(row=row_idx, column=1, value=day)
             for col_offset, value in enumerate(measurements):
                 ws.cell(row=row_idx, column=col_offset + 2, value=value)
