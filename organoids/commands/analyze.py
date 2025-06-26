@@ -94,7 +94,7 @@ def analyze(directory, ext, exif_ext, output):
         days = sorted(int(day) for day in measurements.keys())
         with open(f"{output}.csv", 'w') as f:
             for day in days:
-                f.write(f"{day},{','.join(measurements[day])}\n")
+                f.write(f"{day},{','.join(measurements[str(day)])}\n")
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
