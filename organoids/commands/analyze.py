@@ -104,9 +104,9 @@ def analyze(directory, ext, exif_ext, output):
         for i in range(max_len):
             ws.cell(row=1, column=i + 2, value=f"Measurement {i+1}")
         for row_idx, day in enumerate(days, start=2):
-            measurements = measurements[str(day)]
+            areas = measurements[str(day)]
             ws.cell(row=row_idx, column=1, value=day)
-            for col_offset, value in enumerate(measurements):
+            for col_offset, value in enumerate(areas):
                 ws.cell(row=row_idx, column=col_offset + 2, value=value)
         wb.save(f"{output}.xlsx")
 
