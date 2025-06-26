@@ -16,7 +16,8 @@ def _analyze():
 @click.argument("directory", type=click.Path(exists=True), nargs=-1)
 @click.option("--ext", default=".json", help="File extension to search for (default: .json)")
 @click.option("--exif-ext", default=".jpg", help="File extension to extract EXIF from (default: .jpg)")
-def analyze(directory, ext, exif_ext):
+@click.option("--output", type=click.Path(), help="Output CSV file to write results (default: None, does not write to disk)")
+def analyze(directory, ext, exif_ext, output):
     start("Scanning for files")
     todo = list(directory)
     found = []
@@ -43,7 +44,10 @@ def analyze(directory, ext, exif_ext):
     end()
     
     start("Computing areas")
+    measurements = {}
     for entry, d in tqdm.tqdm(data.items(), desc="Computing areas"):
+        if output:
+            day = os.path.basename(entry).split("_d")[1].split("_")[0]
         image_path = os.path.join(os.path.dirname(entry), d["imagePath"])
         
         pix_size = None
@@ -79,10 +83,16 @@ def analyze(directory, ext, exif_ext):
             area_label = f"Area: {area:.2f} mm²" if exif_found else f"Area: {area:.2f} pixels²"
             s["label"] = f"{s['label']} ({area_label})"  # Append area to the label
             s["area"] = area
-
+            if output:
+                measurements.setdefault(day, []).append(area)
     end()
     start("Writing areas to disk")
     for entry, d in tqdm.tqdm(data.items(), desc="Writing areas to disk"):
         with open(entry, 'wt') as f:
             json.dump(d, f, indent=2)
+    if output:
+        days = sorted(measurements.keys())
+        with open(output, 'w') as f:
+            for day in days:
+                f.write(f"{day},{','.join(measurements[day])}\n")
     end()
