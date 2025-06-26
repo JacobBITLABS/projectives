@@ -2,6 +2,7 @@ import click
 import exif
 import json
 import os
+from openpyxl import Workbook
 import shapely
 import tqdm
 from PIL import Image  # For pixel data
@@ -95,10 +96,9 @@ def analyze(directory, ext, exif_ext, output):
         with open(f"{output}.csv", 'w') as f:
             for day in days:
                 f.write(f"{day},{','.join(measurements[str(day)])}\n")
-        from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
-        ws.title = directory[0]
+        ws.title = output
         ws.cell(row=1, column=1, value="Day")
         max_len = max(len(meas) for meas in measurements.values())
         for i in range(max_len):

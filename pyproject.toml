@@ -23,6 +23,7 @@ dependencies = [
     'exif',
     'labelme',
     'opencv-python',
+    'openpyxl',
     'pandas',
     'shapely',
     'torch',
