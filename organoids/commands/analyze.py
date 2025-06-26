@@ -91,8 +91,22 @@ def analyze(directory, ext, exif_ext, output):
         with open(entry, 'wt') as f:
             json.dump(d, f, indent=2)
     if output:
-        days = sorted(measurements.keys())
-        with open(output, 'w') as f:
+        days = sorted(int(day) for day in measurements.keys())
+        with open(f"{output}.csv", 'w') as f:
             for day in days:
                 f.write(f"{day},{','.join(measurements[day])}\n")
+        from openpyxl import Workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = directory[0]
+        ws.cell(row=1, column=1, value="Day")
+        max_len = max(len(meas) for meas in data.values())
+        for i in range(max_len):
+            ws.cell(row=1, column=i + 2, value=f"Measurement {i+1}")
+        for row_idx, (day, measurements) in enumerate(data.items(), start=2):
+            ws.cell(row=row_idx, column=1, value=day)
+            for col_offset, value in enumerate(measurements):
+                ws.cell(row=row_idx, column=col_offset + 2, value=value)
+        wb.save(f"{output}.xlsx")
+
     end()
