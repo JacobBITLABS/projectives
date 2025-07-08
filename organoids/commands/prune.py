@@ -10,6 +10,7 @@ import pickle
 import scipy.ndimage
 import shapely
 import tqdm
+import zstandard as zstd
 
 from organoids.utils import end, start, status
 
@@ -85,8 +86,9 @@ def prune(file_or_directory, ext, json_ext, pickle_ext, eps, min_size, max_size,
         height = meta[entry]["height"]
         print(f"Loading {entry}")
         image = PIL.Image.open(entry).convert("RGB")
-        with open(os.path.splitext(entry)[0]+pickle_ext, 'rb') as f:
-            loaded_masks = pickle.load(f)
+        with open(os.path.splitext(entry)[0]+pickle_ext+".zst", 'rb') as f:
+            g = zstd.ZstdDecompressor().stream_reader(f)
+            loaded_masks = pickle.load(g)
         masks = []
         for mask in loaded_masks:
             if any(row[0] for row in mask) or any(row[-1] for row in mask):

@@ -8,6 +8,7 @@ import tqdm
 import transformers
 import numpy as np
 import matplotlib.pyplot as plt
+from zstandard import ZstdCompressor
 from organoids.utils import end, start, status
 
 @click.group()
@@ -55,10 +56,12 @@ def segment(file_or_directory, model, ext, viz, pickle_ext, points_per_crop, dev
             plt.axis("off")
             plt.savefig(f"/Users/jacobnielsen/Documents/PROJECTS/Projectives/organoids/organoids/commands/seg_outputs/{os.path.basename(entry)}")
             
-        pickle_path = os.path.splitext(entry)[0]+pickle_ext
-        print("picked path: ", pickle_path)
+        pickle_path = os.path.splitext(entry)[0]+pickle_ext+".zst"
+        print("pickled path: ", pickle_path)
         with open(pickle_path, 'wb') as f:
-            pickle.dump(masks, f)
+            compressor = ZstdCompressor()
+            with compressor.stream_writer(f) as compressed_f:
+                pickle.dump(masks, compressed_f)
         del outputs
         del masks
         del image
