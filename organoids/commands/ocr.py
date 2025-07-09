@@ -103,70 +103,10 @@ def extract_masked_region(image: Image, binary_mask, verbose):
     # Step 4: Apply the mask to retain only the masked pixels in the cropped area
     cropped_image_np = np.array(cropped_image)
     cropped_image_np[cropped_mask == 0] = 255 # Set unmasked areas to black
-    
-    if verbose:
-        Image.fromarray(cropped_image_np).save("before.png")
-
-    non_white = np.any(cropped_image_np < 237, axis=2)
-    rows = np.any(non_white, axis=1)
-    cols = np.any(non_white, axis=0)
-
-    min_y, max_y = np.where(rows)[0][[0, -1]]
-    min_x, max_x = np.where(cols)[0][[0, -1]]
-    
-    cropped_image_np = cropped_image_np[min_y:max_y, min_x:max_x]
-
-    resized_image = resize_image_pil(cropped_image_np, target_size=(100, 100))
-    if verbose:
-        resized_image.save("resized.png")
 
     # Step 6: Convert the result back to a PIL image
-    # result_image = Image.fromarray(cropped_image_np)
-    return resized_image
-
-def clean_ocr_prediction(text):
-    # ocr_corrections = {
-    #     'g': '9',
-    #     'q': '9',
-    #     'Q': '0',
-    #     'O': '0',
-    #     'o': '0',
-    #     'I': '1',
-    #     'l': '1',
-    #     'S': '5',
-    #     's': '5',
-    #     'h': '4',
-    #     'b': '6',
-    #     'B': '8',
-    #     'Z': '2',
-    #     '4p': '4',
-    #     '-': '',
-    # }
-    ocr_corrections = {
-        'I': '1', 'l': '1', '|': '1', 'i': '1',
-        'Z': '2', 'z': '2',
-        'E': '3',
-        'A': '4', 'h': '4', 'H': '4',
-        'S': '5', 's': '5', '$': '5',
-        'b': '6', 'G': '6',
-        'T': '7', 'Y': '7',
-        'B': '8',
-        'g': '9', 'q': '9', 'Q': '9', 'o': '9', 'O': '9', 'D': '9',
-        # optional: '0': '0' if you want to allow zero for special cases
-    }
-    text = re.sub(r'[^a-zA-Z0-9]', '', text) # Remove punctuation and whitespace
-    
-    cleaned = ''.join(ocr_corrections.get(c, c) for c in text)
-    cleaned = ''.join(x for x in cleaned if x.isdigit())
-    # Try converting to a valid number
-    try:
-        num = int(cleaned)
-        if 1 <= num <= 12:
-            return str(num)
-    except ValueError:
-        pass
-
-    return None
+    result_image = Image.fromarray(cropped_image_np)
+    return result_image
 
 @click.group()
 def _ocr():
@@ -232,15 +172,13 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
                 binary_mask = scipy.ndimage.binary_erosion(np.array(binary_mask).astype(int), structure=np.ones((3,3)), iterations=10)
                 
                 result_image = extract_masked_region(image, binary_mask, verbose=verbose)    
-                # result_image = result_image.convert('L')
+                result_image = result_image.convert('L')
                 if verbose:
                     result_image.save("grayscale.png")
                 
-                print("resulting_image: ", result_image)
+                result_image = image.convert('L')
                 result_image = Image.open("grayscale.png")
                 prediction, probabilities = cifar_model.classify(result_image)
-                prediction += 1 # we have 0 class for simplicity
-
                 shape["label"] = f"{str(prediction)}"
         
     end()
@@ -264,3 +202,4 @@ if __name__ == "__main__":
     # result = pytesseract.image_to_string(padded_image, config=r'--oem 3 --psm 10 -c tessedit_char_whitelist=01234567891012')
     # # number = ''.join(filter(str.isdigit, result))
     # print("TESSER CLASSI: ", result)
+    # python3 -m organoids ocr /Users/jacobnielsen/Documents/PROJECTS/Projectives/organoids/gt_testing-images10
