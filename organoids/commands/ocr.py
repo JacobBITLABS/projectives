@@ -193,13 +193,3 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
 if __name__ == "__main__":
     print("HELLO")
     ocr()
-
-    # threshold = 55
-    # threshold = np.mean(np.array(padded_image))
-    # #binary_image = padded_image.point(lambda x: 0 if x < threshold else 255, '1')
-    # #binary_image.save("black_white.png")
-
-    # result = pytesseract.image_to_string(padded_image, config=r'--oem 3 --psm 10 -c tessedit_char_whitelist=01234567891012')
-    # # number = ''.join(filter(str.isdigit, result))
-    # print("TESSER CLASSI: ", result)
-    # python3 -m organoids ocr /Users/jacobnielsen/Documents/PROJECTS/Projectives/organoids/gt_testing-images10
