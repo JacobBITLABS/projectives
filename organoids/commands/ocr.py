@@ -2,8 +2,8 @@ import torch
 import click
 import json
 import numpy as np
-import re
 import os
+import re
 import cv2
 import scipy.ndimage
 import tqdm
@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 from .cifarx import CifarXModel
 from shapely.geometry import Polygon, MultiPoint
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-
+import time
 from organoids.utils import end, start, status
 import time
 
@@ -107,10 +107,6 @@ def extract_masked_region(image: Image, binary_mask, verbose):
     if verbose:
         Image.fromarray(cropped_image_np).save("before.png")
 
-    print("Cropped image size: ", cropped_image_np.shape)
-    if len(cropped_image_np.shape) == 2:
-        cropped_image_np = np.stack([cropped_image_np] * 3, axis=-1)
-        print("Corrected cropped image size: ", cropped_image_np.shape)
     non_white = np.any(cropped_image_np < 237, axis=2)
     rows = np.any(non_white, axis=1)
     cols = np.any(non_white, axis=0)
@@ -120,14 +116,57 @@ def extract_masked_region(image: Image, binary_mask, verbose):
     
     cropped_image_np = cropped_image_np[min_y:max_y, min_x:max_x]
 
-    resized_image = resize_image_pil(cropped_image_np, target_size=(48, 48))
+    resized_image = resize_image_pil(cropped_image_np, target_size=(100, 100))
     if verbose:
         resized_image.save("resized.png")
 
     # Step 6: Convert the result back to a PIL image
     # result_image = Image.fromarray(cropped_image_np)
-    return  resized_image
+    return resized_image
 
+def clean_ocr_prediction(text):
+    # ocr_corrections = {
+    #     'g': '9',
+    #     'q': '9',
+    #     'Q': '0',
+    #     'O': '0',
+    #     'o': '0',
+    #     'I': '1',
+    #     'l': '1',
+    #     'S': '5',
+    #     's': '5',
+    #     'h': '4',
+    #     'b': '6',
+    #     'B': '8',
+    #     'Z': '2',
+    #     '4p': '4',
+    #     '-': '',
+    # }
+    ocr_corrections = {
+        'I': '1', 'l': '1', '|': '1', 'i': '1',
+        'Z': '2', 'z': '2',
+        'E': '3',
+        'A': '4', 'h': '4', 'H': '4',
+        'S': '5', 's': '5', '$': '5',
+        'b': '6', 'G': '6',
+        'T': '7', 'Y': '7',
+        'B': '8',
+        'g': '9', 'q': '9', 'Q': '9', 'o': '9', 'O': '9', 'D': '9',
+        # optional: '0': '0' if you want to allow zero for special cases
+    }
+    text = re.sub(r'[^a-zA-Z0-9]', '', text) # Remove punctuation and whitespace
+    
+    cleaned = ''.join(ocr_corrections.get(c, c) for c in text)
+    cleaned = ''.join(x for x in cleaned if x.isdigit())
+    # Try converting to a valid number
+    try:
+        num = int(cleaned)
+        if 1 <= num <= 12:
+            return str(num)
+    except ValueError:
+        pass
+
+    return None
 
 @click.group()
 def _ocr():
@@ -166,11 +205,9 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
     status(len(data), end='') 
     end()
 
-#    cifar_model = CifarXModel()
-#    cifar_model.load_state_dict(torch.load('organoids/commands/48_48_checkpointv2.pth')['model_state_dict'])
-
-    processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-handwritten')
-    model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-large-handwritten')
+    cifar_model = CifarXModel()
+    cifar_model.load_state_dict(torch.load('organoids/commands/final_digit_model.pth')['model_state_dict'])
+    cifar_model.eval()
     
     start("Extracing masked regions and performing OCR")
     for entry, d in tqdm.tqdm(data.items(), desc="Performing OCR on masked regions"):
@@ -178,7 +215,7 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
         
         # Check if the image has EXIF data
         if image_path.endswith(exif_ext):
-            image = Image.open(image_path)
+            image = Image.open(image_path).convert("RGB")
             
             if evaluate:
                 gt_basename = image_path.replace(".jpg", ".json")
@@ -191,46 +228,21 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
 
             for i, shape in enumerate(d["shapes"]):
                 poly = shape["points"]
-                # print("PRED: ", poly['label'])
                 binary_mask = polygon_to_binary_mask(poly, image)
                 binary_mask = scipy.ndimage.binary_erosion(np.array(binary_mask).astype(int), structure=np.ones((3,3)), iterations=10)
                 
-                print("image size: ", image.size)
-                print("binary mask size: ", binary_mask.shape)
-                
                 result_image = extract_masked_region(image, binary_mask, verbose=verbose)    
                 # result_image = result_image.convert('L')
-                # if verbose:
-                #     result_image.save("grayscale.png")
+                if verbose:
+                    result_image.save("grayscale.png")
                 
-                # binary_image = result_image.point(lambda x: 0 if x < 235 else 255, '1')
-                # if verbose:
-                #     binary_image.save("black_white.png")
-                # prediction = cifar_model.classify(binary_image) # not padded image 
+                print("resulting_image: ", result_image)
+                result_image = Image.open("grayscale.png")
+                prediction, probabilities = cifar_model.classify(result_image)
+                prediction += 1 # we have 0 class for simplicity
 
-                pixel_values = processor(images=result_image, return_tensors="pt").pixel_values
-                generated_ids = model.generate(pixel_values)
-                generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-                print(generated_text)
-                generated_text = generated_text.replace("I", "1")
-                generated_text = generated_text.replace("l", "1")
-                generated_text = generated_text.replace("S", "5")
-                generated_text = generated_text.replace("s", "5")
-                generated_text = generated_text.replace("Z", "2")
-                generated_text = generated_text.replace("z", "2")
-                generated_text = generated_text.replace("B", "8")
-                generated_text = generated_text.replace("g", "9")
-                generated_text = generated_text.replace("G", "6")
-                prediction = ''.join(x for x in generated_text if x.isdigit())
-                if prediction != "11":
-                    prediction = re.sub(r'(.)\1', r'\1', prediction)
-
-                print(f"Predicted: {prediction}")
-
-                cleaned_text = str(prediction).strip()
-                # shape["label"] = f"{cleaned_text} [{prediction}]"
-                shape["label"] = f"{prediction}"
-
+                shape["label"] = f"{str(prediction)}"
+        
     end()
     start("Writing recognized numbers to disk")
     for entry, d in tqdm.tqdm(data.items(), desc="Writing areas to disk"):
