@@ -23,10 +23,15 @@ dependencies = [
     'exif',
     'labelme',
     'opencv-python',
+    'scikit-learn',
     'shapely',
     'torch',
-    'torchvision',    'transformers',
+    'torchvision',
+    'transformers',
 ]
+
+[project.scripts]
+organoids = "organoids.__main__:cli"
 
 [project.urls]
 "Homepage" = "https://github.com/schneiderkamplab/organoids"

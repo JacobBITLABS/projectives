@@ -24,11 +24,12 @@ def load_json(file_path):
 @click.option("--id-separator", default="-kopi", help="Separator for id in file name (default: -kopi).")
 @click.option("--decimal-separator", default=".", help="Decimal separator for CSV file (default: .).")
 @click.option("--permutation", default=None, help="Permutation of labels as comma-separated list (default: None).")
+@click.option("--permutation-prefix", default="", help="Prefix for permutation labels (default: None). If set, will only permute labels for ids starting with this prefix.")
 @click.option("--age-gender", default=None, help="Extra columns for age and gender as json mapping (default: None).")
 @click.option("--exclude", type=click.Path(), help="Exclude files as comma-separated list (default: None).")
 @click.option("--require-prefix", default=None, help="Require that id starts with this, adding add-prefix if necessary (default: None).")
 @click.option("--add-prefix", default=None, help="Add if id does not have required prefix (default: None).")
-def rank(directory, output, ext, separator, id_separator, decimal_separator, permutation, age_gender, exclude, require_prefix, add_prefix):
+def rank(directory, output, ext, separator, id_separator, decimal_separator, permutation, permutation_prefix, age_gender, exclude, require_prefix, add_prefix):
     if require_prefix is not None and add_prefix is None:
         add_prefix = require_prefix
     if exclude is not None:
@@ -49,6 +50,7 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
                 found.append(entry_path)
     status(len(found), end='')
     end()
+    permutation_counter = 0
     start("Computing rank")
     with open(output, "w") as f:
         header = f"id{separator}{separator.join([f'area{i+1}' for i in range(12)])}{separator}{separator.join([f'rank{i+1}' for i in range(12)])}{separator}{separator.join([f'largest{i+1}' for i in range(12)])}"
@@ -64,6 +66,12 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
             if not id_separator in file:
                 print(f"Warning: {file} does not have the expected name format ID{id_separator}.json")
                 continue
+
+            # id from file name
+            id = file.split("/")[-1].rsplit(id_separator, maxsplit=1)[0]
+            if require_prefix and not id.startswith(require_prefix):
+                id = f"{add_prefix}{id}"
+
             poly_data = []
             shapes = data["shapes"]
             for shape in shapes:
@@ -75,10 +83,11 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
                 if len(labels) > 1:
                     print(f"Warning: {file} contains invalid label {label}")
                 for label in labels:
-                    if permutation is not None:
+                    if permutation is not None and id.startswith(permutation_prefix):
+                        permutation_counter += 1
                         try:
                             label = permutation.split(",")[int(label)-1]
-                        except ValueError:
+                        except (ValueError, IndexError):
                             print(f"Warning: {file} contains invalid label {label}")
                             continue
                     try:
@@ -88,11 +97,6 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
                         continue
                     area = poly.area
                     poly_data.append({'label': label, 'area': area})
-
-            # id from file name
-            id = file.split("/")[-1].rsplit(id_separator, maxsplit=1)[0]
-            if require_prefix and not id.startswith(require_prefix):
-                id = f"{add_prefix}{id}"
 
             # list areas
             label2area = {int(poly['label']): poly['area'] for poly in poly_data}
@@ -122,6 +126,7 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
                 line += f"{separator}{meta.get('age', '')}{separator}{meta.get('gender', 0)}"
             f.write(f"{line}\n")
     end()
+    print(f"Permutation counter: {permutation_counter}")
     start("Exporting to Excel")
     df = pd.read_csv(output, sep=separator, decimal=decimal_separator)
     df.to_excel(output.replace(".csv", ".xlsx"), index=False)

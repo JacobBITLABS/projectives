@@ -3,17 +3,13 @@ import click
 import json
 import numpy as np
 import os
-import re
+from pathlib import Path
 import cv2
 import scipy.ndimage
 import tqdm
 from PIL import Image, ImageDraw
 from .cifarx import CifarXModel
-from shapely.geometry import Polygon, MultiPoint
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-import time
 from organoids.utils import end, start, status
-import time
 
 def polygon_to_binary_mask(polygon, image):
     # Convert polygon to list of pairs
@@ -145,8 +141,9 @@ def ocr(directory, ext, exif_ext, verbose, evaluate):
     status(len(data), end='') 
     end()
 
+    model_path = Path(__file__).parent / "final_digit_model.pth"
     cifar_model = CifarXModel()
-    cifar_model.load_state_dict(torch.load('organoids/commands/final_digit_model.pth')['model_state_dict'])
+    cifar_model.load_state_dict(torch.load(model_path)['model_state_dict'])
     cifar_model.eval()
     
     start("Extracing masked regions and performing OCR")
