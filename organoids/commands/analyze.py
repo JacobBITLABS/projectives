@@ -19,7 +19,9 @@ def _analyze():
 @click.option("--exif-ext", default=".jpg", help="File extension to extract EXIF from (default: .jpg)")
 @click.option("--output", type=click.Path(), help="Output CSV file to write results (default: None, does not write to disk)")
 @click.option("--scale", default=1, type=float, help="Scale factor for area calculations (default: 1).")
-def analyze(directory, ext, exif_ext, output, scale):
+@click.option("--min-shapes" , default=None, type=int, help="Minimum number of shapes to consider a file valid (default: None).")
+@click.option("--max-shapes", default=None, type=int, help="Maximum number of shapes to consider a file valid (default: None).")
+def analyze(directory, ext, exif_ext, output, scale, min_shapes, max_shapes):
     start("Scanning for files")
     todo = list(directory)
     found = []
@@ -48,6 +50,12 @@ def analyze(directory, ext, exif_ext, output, scale):
     start("Computing areas")
     measurements = {}
     for entry, d in tqdm.tqdm(data.items(), desc="Computing areas"):
+        if min_shapes is not None and len(d["shapes"]) < min_shapes:
+            print(f"Skipping: {entry} has fewer than {min_shapes} shapes")
+            continue
+        if max_shapes is not None and len(d["shapes"]) > max_shapes:
+            print(f"Skipping: {entry} has more than {max_shapes} shapes")
+            continue
         if output:
             if " d" in os.path.basename(entry):
                 day = os.path.basename(entry).split(" d")[-1].split("_")[0].split()[0]
