@@ -98,10 +98,6 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
                     area = poly.area
                     poly_data.append({'label': label, 'area': area})
 
-            # list areas
-            label2area = {int(poly['label']): poly['area'] for poly in poly_data}
-            areas = separator.join(str(label2area.get(i+1)).replace('.',decimal_separator) for i in range(12))
-
             # sort polygons by area in decreasing order
             poly_data.sort(key=lambda x: x['label'], reverse=True)
             new_poly_data = []
@@ -118,6 +114,10 @@ def rank(directory, output, ext, separator, id_separator, decimal_separator, per
 
             # rank polygons by area
             ranks = separator.join((str(sorted_labels.index(str(i+1))+1) if str(i+1) in sorted_labels else '') for i in range(12))
+
+            # list areas
+            label2area = {int(poly['label']): poly['area'] for poly in new_poly_data}
+            areas = separator.join(str(label2area.get(i+1)).replace('.',decimal_separator) for i in range(12))
 
             # write to CSV file
             line = f'"{id}"{separator}{areas}{separator}{ranks}{separator}{largest}'
