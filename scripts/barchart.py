@@ -17,7 +17,9 @@ from boxplot import FIELDS
 @click.option("--prefixes", type=str, default=None)
 @click.option("--min-age", type=int, default=None)
 @click.option("--max-age", type=int, default=None)
-def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes, min_age, max_age):
+@click.option("--remove-empty/--no-remove-empty", is_flag=True, default=True)
+@click.option("--normalize/--no-normalize", is_flag=True, default=True)
+def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty, normalize):
     df = pd.read_excel(file)
     if gender is not None:
         df = df[df['gender'] == gender]
@@ -30,6 +32,9 @@ def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes
         mask = df["id"].str.startswith(tuple(prefixes))
         df = df.loc[mask]
     d = df.iloc[:,start:end]
+    if remove_empty:
+        d = d.dropna(how='all')
+    sample_size = d.shape[0]
     counts_df = pd.DataFrame({col: df[col].value_counts().reindex(range(1,12+1), fill_value=0)
                             for col in d.columns.tolist()})
     if sorted:
@@ -39,9 +44,11 @@ def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes
         fields = [column2field[col] for col in counts_df.index.tolist()]
     else:
         fields = FIELDS
+    if normalize:
+        counts_df = counts_df.div(counts_df.sum(axis=0)/100, axis=1)
     ax = counts_df.plot(kind='bar', stacked=stacked, figsize=(12, 7))
 
-    plt.title('Top health priorities')
+    plt.title(f'Top health priorities (n={sample_size})', pad=20)
     plt.xlabel('')
     plt.ylabel('')
     plt.xticks(rotation=45)

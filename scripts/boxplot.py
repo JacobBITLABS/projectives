@@ -23,7 +23,8 @@ def clean(s):
 @click.option("--prefixes", type=str, default=None)
 @click.option("--min-age", type=int, default=None)
 @click.option("--max-age", type=int, default=None)
-def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender, prefixes, min_age, max_age):
+@click.option("--remove-empty/--no-remove-empty", is_flag=True, default=True)
+def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty):
     df = pd.read_excel(file)
     if gender is not None:
         df = df[df['gender'] == gender]
@@ -36,6 +37,9 @@ def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender,
         mask = df["id"].str.startswith(tuple(prefixes))
         df = df.loc[mask]
     d = df.iloc[:,start:end]
+    if remove_empty:
+        d = d.dropna(how='all')
+    sample_size = d.shape[0]
     if sorted:
         column2field = {i+1: field for i, field in enumerate(FIELDS)}
         medians = d.median().sort_values(ascending=True)        
@@ -50,6 +54,7 @@ def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender,
     plt.xticks(range(1, 12+1), fields, rotation=45)
     if top_limit:
         plt.ylim(top=top_limit)
+    plt.title(f'Boxplot for priorities (n={sample_size})', pad=20)
     plt.tight_layout()
     if output is None:
         plt.show()
