@@ -27,7 +27,7 @@ def _prune():
 @click.option("--min-size", default=0.00005, help="Minimum size of mask as fraction of total area (default: 0.001)")
 @click.option("--max-size", default=0.35, help="Maximum size of mask as fraction of total area (default: 0.5)")
 @click.option("--brightness-threshold", default=1.5, help="Brightness threshold for masks (default: 1.25)")
-@click.option("--regularity-threshold", default=5, help="Regularity threshold for masks (default: 2)")
+@click.option("--regularity-threshold", default=5.0, help="Regularity threshold for masks (default: 2)")
 @click.option("--subsumption-threshold", default=0.9, help="Threshold for how much overlap with other circles(!) is tolerated (default: 0.9)")
 @click.option("--empty-threshold", default=192, help="Threshold for how dark pixels there should (default: 192)")
 def prune(file_or_directory, ext, json_ext, pickle_ext, eps, min_size, max_size, brightness_threshold, regularity_threshold, subsumption_threshold, empty_threshold):

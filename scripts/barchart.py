@@ -19,7 +19,8 @@ from boxplot import FIELDS
 @click.option("--max-age", type=int, default=None)
 @click.option("--remove-empty/--no-remove-empty", is_flag=True, default=True)
 @click.option("--normalize/--no-normalize", is_flag=True, default=True)
-def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty, normalize):
+@click.option("--dpi", type=int, default=300)
+def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty, normalize, dpi):
     df = pd.read_excel(file)
     if gender is not None:
         df = df[df['gender'] == gender]
@@ -60,7 +61,7 @@ def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes
     if output is None:
         plt.show()
     else:
-        plt.savefig(output, format=format)
+        plt.savefig(output, format=format, dpi=dpi)
         print(f"Saved to {output}")
 
 if __name__ == "__main__":

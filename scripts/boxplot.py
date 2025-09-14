@@ -24,7 +24,8 @@ def clean(s):
 @click.option("--min-age", type=int, default=None)
 @click.option("--max-age", type=int, default=None)
 @click.option("--remove-empty/--no-remove-empty", is_flag=True, default=True)
-def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty):
+@click.option("--dpi", type=int, default=300)
+def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender, prefixes, min_age, max_age, remove_empty, dpi):
     df = pd.read_excel(file)
     if gender is not None:
         df = df[df['gender'] == gender]
@@ -59,7 +60,7 @@ def boxplot(file, start, end, invert, top_limit, sorted, output, format, gender,
     if output is None:
         plt.show()
     else:
-        plt.savefig(output, format=format)
+        plt.savefig(output, format=format, dpi=dpi)
         print(f"Saved to {output}")
 
 if __name__ == "__main__":
