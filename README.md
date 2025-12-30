@@ -1,2 +1,2 @@
-# organoids
-Automatic segmentation and analysis of organoids
+# Projectives
+Automatic segmentation and analysis of the projectives technique
