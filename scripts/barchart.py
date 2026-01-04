@@ -49,14 +49,14 @@ def barchart(file, start, end, stacked, sorted, output, format, gender, prefixes
         counts_df = counts_df.div(counts_df.sum(axis=0)/100, axis=1)
     ax = counts_df.plot(kind='bar', stacked=stacked, figsize=(12, 7))
 
-    plt.title(f'Top health priorities (n={sample_size})', pad=20)
+    plt.title(f'Top-2 and top-3 health priorities for participants with family as top-1 (n={sample_size})', pad=20)
     plt.xlabel('')
     plt.ylabel('')
     plt.xticks(rotation=45)
     ax.set_xticklabels(fields)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-    plt.legend([f"top-{i}" for i in range(1, end-start+1)], title='Priorities')
+    plt.legend([f"top-{i+1}" for i in range(1, end-start+1)], title='Priorities')
     plt.tight_layout()
     if output is None:
         plt.show()

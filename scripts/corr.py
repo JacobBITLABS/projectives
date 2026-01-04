@@ -16,10 +16,11 @@ from boxplot import FIELDS
 @click.option("--prefixes", type=str, default=None)
 @click.option("--min-age", type=int, default=None)
 @click.option("--max-age", type=int, default=None)
-@click.option("--normalize/--no-normalize", is_flag=True, default=True)
+@click.option("--normalize/--no-normalize", is_flag=True, default=False)
+@click.option("--baseline/--no-baseline", is_flag=True, default=True)
 @click.option("--remove-empty/--no-remove-empty", is_flag=True, default=True)
 @click.option("--dpi", type=int, default=300)
-def corr(file, start, end, output, format, gender, prefixes, min_age, max_age, normalize, remove_empty, dpi):
+def corr(file, start, end, output, format, gender, prefixes, min_age, max_age, normalize, baseline, remove_empty, dpi):
     df = pd.read_excel(file)
     if gender is not None:
         df = df[df['gender'] == gender]
@@ -34,6 +35,8 @@ def corr(file, start, end, output, format, gender, prefixes, min_age, max_age, n
     selected_df = df.iloc[:,start:end]
     if remove_empty:
         selected_df = selected_df.dropna(how='all')
+    if baseline:
+        selected_df = selected_df.div(df['baseline'], axis=0)
     if normalize:
         selected_df = selected_df.div(selected_df.sum(axis=1), axis=0)
     selected_df = selected_df.join(df.loc[selected_df.index, ["age", "gender"]])
