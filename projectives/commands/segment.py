@@ -9,7 +9,7 @@ import transformers
 import numpy as np
 import matplotlib.pyplot as plt
 from zstandard import ZstdCompressor
-from organoids.utils import end, start, status
+from ..utils import end, start, status
 
 @click.group()
 def _segment():
@@ -18,7 +18,7 @@ def _segment():
 @click.argument("file-or-directory", type=click.Path(exists=True), nargs=-1)
 @click.option("--model", default="facebook/sam-vit-base", help="Model to use for segmentation (default: facebook/sam-vit-base)")
 @click.option("--ext", default=".jpg", help="File extension to search for (default: .jpg)")
-@click.option("--viz", default=True, help="Visualize)")
+@click.option("--viz", default=False, help="Visualize)")
 @click.option("--pickle-ext", default=".pickle", help="File extension to save masks to (default: .pickle)")
 @click.option("--points-per-crop", default=60, help="Number of points per crop (default: 24)")
 @click.option("--device", default="cpu", help="Device to use for segmentation (cpu, mps, cuda) (default: cpu)")
@@ -54,7 +54,8 @@ def segment(file_or_directory, model, ext, viz, pickle_ext, points_per_crop, dev
             for mask in outputs["masks"]:
                 show_mask(mask, ax=ax, random_color=True)
             plt.axis("off")
-            plt.savefig(f"/Users/jacobnielsen/Documents/PROJECTS/Projectives/organoids/organoids/commands/seg_outputs/{os.path.basename(entry)}")
+            os.makedirs("viz", exist_ok=True)
+            plt.savefig(f"viz/{os.path.basename(entry)}")
             
         pickle_path = os.path.splitext(entry)[0]+pickle_ext+".zst"
         print("pickled path: ", pickle_path)

@@ -12,7 +12,7 @@ import shapely
 import tqdm
 import zstandard as zstd
 
-from organoids.utils import end, start, status
+from ..utils import end, start, status
 
 
 @click.group()

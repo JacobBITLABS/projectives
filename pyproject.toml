@@ -3,13 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "organoids"
-version = "1.2.0"
+name = "projectives"
+version = "1.3.2"
 authors = [
-  { name = "Peter Schneider-Kamp" }
+  { name = "Jacob Nielsen" },
+  { name = "Stine Lyngsø Beltoft" },
 ]
 
-description = "A segmentation and area estimation for organoids on microscope images."
+description = "A segmentation and area estimation for the 12-Circles Drawing Technique."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -23,23 +24,24 @@ dependencies = [
     'exif',
     'labelme',
     'opencv-python',
-    'scikit-learn',
+    'pandas',
     'shapely',
     'torch',
     'torchvision',
     'transformers',
+    'zstandard',
 ]
 
-[project.scripts]
-organoids = "organoids.__main__:cli"
-
 [project.urls]
-"Homepage" = "https://github.com/schneiderkamplab/organoids"
-"Bug Tracker" = "https://github.com/schneiderkamplab/organoids/issues"
+"Homepage" = "https://github.com/JacobBITLABS/projectives"
+"Bug Tracker" = "https://github.com/JacobBITLABS/projectives/issues"
+
+[project.scripts]
+projectives = "projectives.__main__:cli"
 
 [tool.hatch.build]
 include = [
-    'organoids',
+    'projectives',
     'LICENSE',
     'README.md',
 ]

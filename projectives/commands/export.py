@@ -8,7 +8,7 @@ import scipy
 import tqdm
 from PIL import Image, ImageDraw
 
-from organoids.utils import end, start, status
+from ..utils import end, start, status
 
 def polygon_to_binary_mask(polygon, image):
     # Convert polygon to list of pairs
