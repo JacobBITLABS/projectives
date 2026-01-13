@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "projectives"
+version = "1.3.2"
+authors = [
+  { name = "Jacob Nielsen" },
+  { name = "Stine Lyngsø Beltoft" },
+]
+
+description = "A segmentation and area estimation for the 12-Circles Drawing Technique."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    'click',
+    'exif',
+    'labelme',
+    'opencv-python',
+    'pandas',
+    'shapely',
+    'torch',
+    'torchvision',
+    'transformers',
+    'zstandard',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/JacobBITLABS/projectives"
+"Bug Tracker" = "https://github.com/JacobBITLABS/projectives/issues"
+
+[project.scripts]
+projectives = "projectives.__main__:cli"
+
+[tool.hatch.build]
+include = [
+    'projectives',
+    'LICENSE',
+    'README.md',
+]
